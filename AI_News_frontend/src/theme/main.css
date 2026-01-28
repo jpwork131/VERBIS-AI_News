@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  /* Editorial Color Palette */
+  --color-ink: #0f172a;       /* Dark slate for high readability */
+  --color-paper: #ffffff;     /* Pure white */
+  --color-accent: #2563eb;    /* Trustworthy Blue */
+  --color-muted: #64748b;     /* Medium gray for secondary text */
+  
+  /* Typography */
+  --font-serif: "Ibarra Real Nova", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    /* Globally fix the "too light" text */
+    @apply bg-paper text-ink antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif font-black tracking-tight text-ink;
+  }
+
+  /* Smooth scrolling for the Table of Contents we built earlier */
+  html {
+    scroll-behavior: smooth;
+  }
+}

@@ -1,0 +1,130 @@
+const axios = require("axios");
+const settingsModel = require("../models/settingsModel");
+
+async function callAI(messages) {
+  const settings = await settingsModel.findOne({ key: "model_config" }).lean();
+  
+  // 1. Find the provider based on the NEW activeTextProvider field
+  const provider = settings.aiProviders.find(p => p.name === settings.activeTextProvider);
+  if (!provider) throw new Error("Active Text Provider not found in pool");
+
+  const { baseUrl, apiKey, textModel, authHeader, payloadStructure, metadata } = provider;
+  
+  // 2. DYNAMIC URL RESOLVER (Metadata Aware)
+  let cleanBaseUrl = baseUrl.replace(/\/$/, "");
+  
+  // Handle Cloudflare {accountId} replacement if it exists in the metadata Map
+  if (metadata && (metadata.accountId || metadata.get?.('accountId'))) {
+    const accId = metadata.accountId || metadata.get('accountId');
+    cleanBaseUrl = cleanBaseUrl.replace("{accountId}", accId);
+  }
+
+  // 3. PROTOCOL ROUTING
+  let url = `${cleanBaseUrl}/chat/completions`; 
+  let body = {};
+  let headers = {
+    [authHeader]: authHeader === "Authorization" ? `Bearer ${apiKey}` : apiKey,
+    "Content-Type": "application/json"
+  };
+
+  if (payloadStructure === "anthropic") {
+    url = `${cleanBaseUrl}/messages`;
+    headers["anthropic-version"] = "2023-06-01"; 
+    body = {
+      model: textModel,
+      max_tokens: 4096,
+      messages: messages.filter(m => m.role !== "system"),
+      system: messages.find(m => m.role === "system")?.content || ""
+    };
+  } else if (payloadStructure === "custom") {
+     // If you use Cloudflare Workers AI Text models, they use a different URL structure
+     url = `${cleanBaseUrl}/${textModel}`;
+     body = { messages };
+  } else {
+    // OpenAI / OpenRouter / Groq Standard
+    body = {
+      model: textModel,
+      messages,
+      temperature: 0.7,
+      ...(messages.some(m => m.content.toLowerCase().includes("json")) && { 
+          response_format: { type: "json_object" } 
+      })
+    };
+  }
+
+  try {
+    const response = await axios.post(url, body, { headers });
+
+    // 4. RESPONSE EXTRACTION
+    let content = "";
+    if (payloadStructure === "anthropic") {
+      content = response.data.content[0].text;
+    } else if (response.data.choices) {
+      content = response.data.choices[0].message.content;
+    } else if (response.data.result) {
+      // Common for Cloudflare/Custom response structures
+      content = response.data.result.response || response.data.result;
+    }
+
+    return { content, modelUsed: `${provider.name}/${textModel}` };
+  } catch (error) {
+    console.error("AI Error:", error.response?.data || error.message);
+    throw new Error(`AI Synthesis Failed: ${error.message}`);
+  }
+}
+
+exports.processNewsWithAI = async (content) => {
+  if (!content || content.trim().length === 0) throw new Error("No content provided");
+
+  const settings = await settingsModel.findOne({ key: "model_config" }).lean();
+  const customPrompt = settings?.globalPrompt || "";
+
+  const systemPrompt = `
+    You are a Senior Investigative Journalist and Editor.
+    Your task is to transform raw news into a comprehensive, long-form feature article.
+    
+    ${customPrompt}
+
+    OUTPUT REQUIREMENTS:
+    1. "title": Create a new, click-worthy, SEO-optimized headline that is different from the original.
+    2. "rewrittenContent": Must be at least 800-1000 words. 
+       - Structure with multiple markdown subheadings (##, ###).
+       - Include bullet points for readability.
+       - Provide historical context and future implications.
+    3. "summary": A compelling 4-5 line executive summary for meta descriptions.
+    4. "seoKeywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"] (Exactly 5 strings).
+
+    STRICT FORMATTING: 
+  - Output ONLY valid JSON.
+  - Do NOT use markdown code blocks.
+  - If you use double quotes inside the content, you MUST use their Unicode escape sequence (\u0022) or simply use single quotes (') to avoid breaking the JSON structure.
+
+    JSON STRUCTURE:
+    {
+      "title": "string",
+      "rewrittenContent": "string",
+      "summary": "string",
+      "seoKeywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+    }
+`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: `Raw News Data: ${content}` }
+  ];
+
+  const { content: raw, modelUsed } = await callAI(messages);
+  
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("AI failed to return a JSON object");
+  const cleanJson = jsonMatch[0];
+  const parsed = JSON.parse(cleanJson);
+
+  return {
+    title: parsed.title, 
+    rewrittenContent: parsed.rewrittenContent,
+    summary: parsed.summary,
+    seoKeywords: parsed.seoKeywords,
+    modelUsed
+  };
+};
