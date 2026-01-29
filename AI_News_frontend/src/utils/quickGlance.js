@@ -1,28 +1,25 @@
 export const getQuickGlanceData = (articles, activeCategory) => {
   if (!articles || articles.length === 0) return null;
 
-  // Latest
+  // 1. Latest Entry
   const latest = articles[0];
 
-  // Top Category
-  const categoryCount = {};
-  articles.forEach(a => categoryCount[a.category] = (categoryCount[a.category] || 0) + 1);
-  const topCategory = Object.keys(categoryCount).reduce(
-    (a,b) => categoryCount[a] > categoryCount[b] ? a : b
-  );
+  // 2. Trending: Randomly selected from the 5 most recent articles
+  const top5 = articles.slice(0, Math.min(5, articles.length));
+  const trending = top5[Math.floor(Math.random() * top5.length)];
 
-  // AI Pick: longest summary
-  const first10 = articles.slice(0, 10);
-    const aiPick = first10.reduce((best, a) => {
-    if (!best || (a.summary && a.summary.length > best.summary.length)) return a;
+  // 3. Primary AI Pick: Article with the most comprehensive summary
+  const pool = articles.slice(0, 15);
+  const aiPick = pool.reduce((best, a) => {
+    if (!best || (a.summary?.length > (best.summary?.length || 0))) return a;
     return best;
-    }, null);
+  }, null);
 
-  // Trending: random from top 5 newest
-    const top5 = articles.slice(0, Math.min(5, articles.length));
-    const trending = top5[Math.floor(Math.random() * top5.length)];
+  // 4. Secondary AI Pick: A different high-quality pick (e.g., specific category or length)
+  // We filter out the primary aiPick so we don't duplicate
+  const secondaryAiPick = pool
+    .filter(a => a._id !== aiPick?._id)
+    .find(a => a.title.length > 40) || articles[1];
 
-
-  return { latest, topCategory, aiPick, trending };
-  };
-
+  return { latest, aiPick, trending, secondaryAiPick };
+};

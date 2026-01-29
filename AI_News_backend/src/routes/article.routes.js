@@ -29,6 +29,8 @@ router.get("/v/id/:id", generalLimiter, controller.getArticleById);
 // 5. ACTIONS
 router.post("/:id/like", authMiddleware, interactionLimiter, controller.toggleLike);
 router.post("/:id/comment", authMiddleware, interactionLimiter, controller.addComment);
+router.patch("/:id/comments/:commentId/like", authMiddleware, controller.toggleCommentLike);
+router.delete("/:id/comments/:commentId", authMiddleware, controller.deleteComment);
 
 // 6. ADMIN ROUTES
 router.post("/admin/create", authMiddleware, authorize("admin"), controller.createArticleAI);

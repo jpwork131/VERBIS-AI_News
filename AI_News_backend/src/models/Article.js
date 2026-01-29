@@ -39,9 +39,12 @@ const ArticleSchema = new mongoose.Schema(
     comments: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        comment: String,
-        createdAt: { type: Date, default: Date.now },
-      },
+        userName: String, // Denormalized for speed
+        comment: { type: String, required: true },
+        parentId: { type: mongoose.Schema.Types.ObjectId, default: null }, // The "Magic" field for replies
+        likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        createdAt: { type: Date, default: Date.now }
+      }
     ],
     isPurged: { type: Boolean, default: false }
   },

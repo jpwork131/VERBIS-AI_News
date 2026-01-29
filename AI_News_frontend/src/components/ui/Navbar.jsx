@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import SearchInput from "./SearchInput";
 import { logoutUser } from "../../api/auth";
-import { LogIn, LogOut, Search, User, X } from "lucide-react";
+import { ArrowUpRight, LogIn, LogOut, Search, User, X } from "lucide-react";
 import { useBranding } from "../../context/BrandingContext";
 import { useState } from "react";
 
@@ -27,98 +27,138 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
-      {/* Optional: Top thin info bar */}
-      <div className="hidden md:block bg-slate-50 border-b border-slate-100 py-1.5">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-          <span className="text-blue-600">AI Insights & Analysis</span>
+  <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md">
+    {/* 1. THE TOP UTILITY BAR (Clean & Essential) */}
+    <div className="hidden md:block border-b border-slate-100 py-2">
+      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Live Updates</span>
+          </div>
+          <div className="h-3 w-[1px] bg-slate-200" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">
+            {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+           <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-300 italic">
+             Verbis Editorial System v3.0
+           </span>
         </div>
       </div>
+    </div>
 
-      <div className="mx-auto max-w-7xl px-4 md:px-6 h-20 flex items-center justify-between gap-8">
+    {/* 2. MAIN NAVIGATION */}
+    <div className="relative border-b border-slate-950/5">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 h-24 flex items-center justify-between gap-12">
         
-        {/* 1. Brand Section (Masthead Style) */}
+        {/* BRANDING: Asymmetric Serif Style */}
         {!isMobileSearchOpen && (
-          <Link to="/" className="flex items-center gap-3 shrink-0 group">
-            {branding.logo ? (
-              <img 
-                src={branding.logo} 
-                alt="logo" 
-                className="h-10 w-auto object-contain transition-transform group-hover:scale-105" 
-              />
-            ) : (
-              <div className="w-10 h-10 bg-black rounded-sm flex items-center justify-center text-white font-serif italic text-xl">V</div>
-            )}
-            <div className="flex flex-col">
-              <span className="font-serif font-black text-2xl leading-none tracking-tighter text-slate-900">
-                {branding.siteTitle?.split(' ')[0] || "VERBIS"}
-                <span className="text-blue-600">.</span>
-              </span>
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mt-1">
-                {branding.siteTitle?.split(' ')[1] || "AI NEWS"}
+          <Link to="/" className="flex items-center gap-6 group shrink-0">
+            <div className="relative">
+              {branding.logo ? (
+                <img 
+                  src={branding.logo} 
+                  className="h-12 w-auto object-contain transition-all duration-500 group-hover:scale-110" 
+                  alt="logo" 
+                />
+              ) : (
+                <div className="w-14 h-14 bg-slate-900 flex items-center justify-center text-white font-serif text-3xl group-hover:bg-blue-600 transition-colors duration-500">
+                  V
+                </div>
+              )}
+              {/* Corner Accent for the Logo */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-blue-600 opacity-0 group-hover:opacity-100 transition-all duration-500" />
+            </div>
+
+            <div className="hidden sm:flex flex-col">
+              <h1 className="font-serif font-black text-4xl leading-none tracking-tighter text-slate-950">
+                {branding.siteTitle?.split(' ')[0] || "Verbis"}
+              </h1>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 mt-1">
+                {branding.siteTitle?.split(' ')[1] || "Intelligence"}
               </span>
             </div>
           </Link>
         )}
 
-        {/* 2. Search Section (Clean Editorial Input) */}
-        <div className={`flex-1 flex justify-center ${isMobileSearchOpen ? "block" : "hidden md:flex"}`}>
-          <div className="w-full max-w-lg relative flex items-center">
-            <SearchInput onResults={(results) => console.log(results)} />
+        {/* SEARCH: Modern Integrated Dock */}
+        <div className={`flex-1 max-w-xl transition-all duration-700 ${isMobileSearchOpen ? "fixed inset-0 bg-white z-[60] p-6 flex items-start" : "hidden md:block"}`}>
+          <div className="relative w-full group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search size={16} className="text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+            </div>
             
+            <SearchInput 
+              className="w-full bg-slate-50 border-2 border-transparent focus:border-slate-900 focus:bg-white h-14 pl-12 pr-4 text-sm font-medium transition-all rounded-none" 
+              placeholder="Search the archive..."
+            />
+
+            {/* Kinetic Border (Underline) */}
+            <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-blue-600 group-focus-within:w-full transition-all duration-700" />
+
             {isMobileSearchOpen && (
               <button 
                 onClick={() => setIsMobileSearchOpen(false)}
-                className="md:hidden ml-4 p-2 text-slate-900"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-900"
               >
-                <X className="h-6 w-6" />
+                <X size={24} />
               </button>
             )}
           </div>
         </div>
 
-        {/* 3. Actions Section */}
+        {/* ACTIONS: Adaptive Pill Style */}
         {!isMobileSearchOpen && (
-          <div className="flex items-center gap-4 shrink-0">
-            
-            {/* Mobile Search Toggle */}
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMobileSearchOpen(true)}
-              className="md:hidden p-2 text-slate-600 hover:text-black"
+              className="md:hidden w-12 h-12 flex items-center justify-center border border-slate-100 rounded-full"
             >
-              <Search className="h-6 w-6" />
+              <Search size={20} className="text-slate-900" />
             </button>
 
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
                 <Link
                   to="/profile"
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-lg transition-all"
+                  className="flex items-center gap-3 pl-2 pr-5 py-2 bg-slate-900 text-white hover:bg-blue-600 transition-all duration-300 rounded-full group"
                 >
-                  <User className="h-4 w-4" />
-                  <span>{user?.name?.split(' ')[0]}</span>
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[12px] font-black">
+                    {user?.name?.charAt(0)}
+                  </div>
+                  <span className="hidden lg:inline text-[11px] font-black uppercase tracking-widest">
+                    Account
+                  </span>
                 </Link>
+                
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-400 hover:text-red-600 transition-colors"
-                  title="Logout"
+                  className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all rounded-full"
+                  title="Sign Out"
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut size={18} />
                 </button>
               </div>
             ) : (
               <Link
                 to="/login"
-                className="group relative px-6 py-2 overflow-hidden bg-black text-white text-xs font-black uppercase tracking-widest rounded-sm"
+                className="group relative h-14 flex items-center px-10 bg-white border-2 border-slate-950 overflow-hidden"
               >
-                <span className="relative z-10">Sign In</span>
-                <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                {/* Hover Fill Effect */}
+                <div className="absolute inset-0 w-0 bg-slate-950 transition-all duration-500 group-hover:w-full" />
+                <span className="relative z-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-950 group-hover:text-white transition-colors">
+                  Sign In
+                </span>
+                <ArrowUpRight size={14} className="relative z-10 ml-2 text-slate-950 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
               </Link>
             )}
           </div>
         )}
       </div>
-    </nav>
-  );
+    </div>
+  </nav>
+);
 }

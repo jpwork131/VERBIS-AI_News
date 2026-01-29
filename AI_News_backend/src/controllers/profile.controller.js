@@ -4,8 +4,14 @@ exports.getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
       .select("-password")
-      .populate("savedArticles", "title bannerImage summary source publishedAt category")
-      .populate("likedArticles", "title bannerImage summary source publishedAt category");
+      .populate({
+        path: "savedArticles",
+        select: "title bannerImage summary source publishedAt category categorySlug slug likesCount",
+      })
+      .populate({
+        path: "likedArticles",
+        select: "title bannerImage summary source publishedAt category categorySlug slug likesCount",
+      });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -13,6 +19,7 @@ exports.getMyProfile = async (req, res) => {
 
     res.json(user);
   } catch (err) {
+    console.error("Profile Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -295,19 +295,95 @@ exports.searchArticles = async (req, res) => {
   }
 };
 
+/** POST add comment to article
+ */
 exports.addComment = async (req, res) => {
   try {
+    const userProfile = await User.findById(req.user.id).select("username name");
+    
+    // 2. Determine the best display name
+    const displayName =  userProfile?.name;
+    const { comment, parentId } = req.body; // parentId is null for top-level, or a Comment ID for replies
     const article = await Article.findById(req.params.id);
-    if (!article) return res.status(404).json({ message: "Article not found" });
 
-    article.comments.push({
+    const newComment = {
       user: req.user.id,
-      comment: req.body.comment,
-    });
+      userName: displayName, 
+      comment,
+      parentId: parentId || null,
+      likes: [],
+      createdAt: new Date()
+    };
 
+    article.comments.push(newComment);
     await article.save();
+
     res.status(201).json(article.comments);
   } catch (err) {
+    res.status(500).json({ message: "Post failed" });
+  }
+};
+
+/** POST toggle like on comment
+ */
+exports.toggleCommentLike = async (req, res) => {
+  try {
+    const { id, commentId } = req.params; // Article ID and Comment ID
+    const userId = req.user.id;
+
+    const article = await Article.findById(id);
+    if (!article) return res.status(404).json({ message: "Article not found" });
+
+    // Target the specific comment within the article
+    const comment = article.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    const isLiked = comment.likes.includes(userId);
+
+    if (isLiked) {
+      comment.likes.pull(userId); // Unlike
+    } else {
+      comment.likes.push(userId); // Like
+    }
+
+    await article.save();
+
+    // Return the full updated comments array so the frontend stays in sync
+    res.json(article.comments);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+/** DELETE comment from article
+ */
+exports.deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    const article = await Article.findById(id);
+    if (!article) return res.status(404).json({ message: "Article not found" });
+
+    const comment = article.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    // Authorization: Only author or admin can delete
+    if (comment.user.toString() !== userId && userRole !== 'admin') {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Remove the comment and all its nested replies
+    // We filter out the comment itself AND any comment that has it as a parentId
+    article.comments = article.comments.filter(
+      (c) => c._id.toString() !== commentId && c.parentId?.toString() !== commentId
+    );
+
+    await article.save();
+    res.json(article.comments);
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed" });
   }
 };

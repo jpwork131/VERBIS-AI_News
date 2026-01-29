@@ -24,51 +24,46 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 
   if (totalPages <= 1) return null;
 
-  // Refined Editorial Style Class
   const baseBtnClass = `
-    h-12 flex items-center justify-center transition-all duration-300
-    border-t border-b border-l last:border-r border-slate-200
-    font-medium text-xs tracking-[0.15em] uppercase
-    disabled:opacity-20 disabled:cursor-not-allowed
-  `;
+  relative h-16 flex items-center justify-center transition-all duration-300
+  font-black text-lg tracking-tighter
+  disabled:opacity-10 disabled:cursor-not-allowed
+`;
 
-  const formatNum = (n) => (n < 10 ? `0${n}` : n);
+const formatNum = (n) => (n < 10 ? `0${n}` : n);
 
-  return (
-    <div className="mt-24 mb-16 flex flex-col items-center gap-6">
-      {/* Decorative Label */}
-      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">
-        Index Selection
-      </span>
+return (
+  <div className="mt-32 mb-20 flex flex-col items-center w-full">
+    {/* 1. Large Visual Progress (Optional but helpful) */}
+    <div className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 mb-4">
+      Section Sequence
+    </div>
 
-      <div className="flex items-center">
-        {/* PREV BUTTON */}
-        <button
-          disabled={page === 1}
-          onClick={() => onPageChange(page - 1)}
-          className={`${baseBtnClass} px-6 bg-transparent hover:bg-slate-50 text-slate-900`}
-        >
-          <ChevronLeft size={14} className="mr-2" />
-          <span className="hidden sm:inline">Previous</span>
-        </button>
+    <div className="flex items-center justify-center w-full max-w-2xl border-y border-slate-900 py-2">
+      
+      {/* PREVIOUS - Large Hit Area */}
+      <button
+        disabled={page === 1}
+        onClick={() => onPageChange(page - 1)}
+        className="h-20 px-8 flex items-center gap-3 group text-slate-900 hover:text-blue-600 disabled:text-slate-200 transition-colors"
+      >
+        <span className="text-2xl group-hover:-translate-x-2 transition-transform italic">←</span>
+        <span className="text-xs font-black uppercase tracking-widest hidden md:inline">Prev</span>
+      </button>
 
-        {/* FIRST PAGE & ELLIPSIS */}
-        {page > 3 && (
-          <div className="flex">
-            <button
-              onClick={() => onPageChange(1)}
-              className={`${baseBtnClass} w-12 bg-transparent hover:text-blue-600`}
-            >
-              01
-            </button>
-            <div className={`${baseBtnClass} w-12 text-slate-300`}>
-              <MoreHorizontal size={14} />
-            </div>
-          </div>
+      {/* NUMBERS - Massive & Clear */}
+      <div className="flex-1 flex items-center justify-center gap-2 md:gap-4 border-x border-slate-100 px-4">
+        {page > 2 && (
+          <button
+            onClick={() => onPageChange(1)}
+            className="w-12 h-12 text-slate-300 hover:text-slate-900 font-serif italic text-xl"
+          >
+            01
+          </button>
         )}
 
-        {/* PAGE NUMBERS */}
-        <div className="flex">
+        {/* Dynamic Window */}
+        <div className="flex items-center gap-1 md:gap-2">
           {getPages().map((p) => {
             const isActive = p === page;
             return (
@@ -76,54 +71,56 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
                 key={p}
                 onClick={() => onPageChange(p)}
                 className={`
-                  ${baseBtnClass} w-12 relative overflow-hidden
+                  w-14 h-14 md:w-16 md:h-16 flex items-center justify-center transition-all duration-500
                   ${isActive 
-                    ? "text-white bg-slate-900 border-slate-900" 
-                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-slate-900 text-white scale-110 shadow-xl" 
+                    : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
                   }
                 `}
               >
-                {formatNum(p)}
-                {isActive && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500" />
-                )}
+                <span className="text-2xl font-black">{formatNum(p)}</span>
               </button>
             );
           })}
         </div>
 
-        {/* LAST PAGE & ELLIPSIS */}
-        {page < totalPages - 2 && (
-          <div className="flex">
-            <div className={`${baseBtnClass} w-12 text-slate-300`}>
-              <MoreHorizontal size={14} />
-            </div>
-            <button
-              onClick={() => onPageChange(totalPages)}
-              className={`${baseBtnClass} w-12 bg-transparent hover:text-blue-600`}
-            >
-              {formatNum(totalPages)}
-            </button>
-          </div>
+        {page < totalPages - 1 && (
+          <button
+            onClick={() => onPageChange(totalPages)}
+            className="w-12 h-12 text-slate-300 hover:text-slate-900 font-serif italic text-xl"
+          >
+            {formatNum(totalPages)}
+          </button>
         )}
-
-        {/* NEXT BUTTON */}
-        <button
-          disabled={page === totalPages}
-          onClick={() => onPageChange(page + 1)}
-          className={`${baseBtnClass} px-6 bg-transparent hover:bg-slate-50 text-slate-900`}
-        >
-          <span className="hidden sm:inline">Next</span>
-          <ChevronRight size={14} className="ml-2" />
-        </button>
       </div>
 
-      {/* Page Indicator Text */}
-      <p className="font-serif italic text-sm text-slate-400">
-        Displaying volume {page} of {totalPages}
-      </p>
+      {/* NEXT - Large Hit Area */}
+      <button
+        disabled={page === totalPages}
+        onClick={() => onPageChange(page + 1)}
+        className="h-20 px-8 flex items-center gap-3 group text-slate-900 hover:text-blue-600 disabled:text-slate-200 transition-colors"
+      >
+        <span className="text-xs font-black uppercase tracking-widest hidden md:inline">Next</span>
+        <span className="text-2xl group-hover:translate-x-2 transition-transform italic">→</span>
+      </button>
     </div>
-  );
+
+    {/* Footer Status */}
+    <div className="mt-10 flex flex-col items-center gap-2">
+       <p className="text-slate-400 text-sm font-medium italic">
+         Currently viewing {page} of {totalPages}
+       </p>
+       <div className="flex gap-1">
+         {[...Array(totalPages)].map((_, i) => (
+           <div 
+             key={i} 
+             className={`h-1 transition-all duration-500 ${i + 1 === page ? "w-8 bg-blue-600" : "w-2 bg-slate-100"}`} 
+           />
+         ))}
+       </div>
+    </div>
+  </div>
+);
 };
 
 export default Pagination;

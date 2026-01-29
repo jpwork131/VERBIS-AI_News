@@ -68,7 +68,21 @@ export const searchArticles = async (query, page = 1, limit = 10) => {
 };
 
 export const likeArticle = (id) => api.post(`/articles/${id}/like`);
-export const commentArticle = (id, text) => api.post(`/articles/${id}/comment`, { comment: text });
+
+// Accept parentId as an optional second argument
+export const commentArticle = (id, text, parentId = null) => 
+  api.post(`/articles/${id}/comment`, { 
+    comment: text, 
+    parentId: parentId // This tells the backend if it's a reply
+  });
+
+// Toggle like on a specific comment
+export const likeComment = (articleId, commentId) => 
+api.patch(`/articles/${articleId}/comments/${commentId}/like`);
+
+// Delete a specific comment
+export const deleteComment = (articleId, commentId) => 
+  api.delete(`/articles/${articleId}/comments/${commentId}`);
 
 // Utility for saving to user profile (ensure this matches your user/article controller)
 export const saveArticle = (id) => api.post(`/users/save/${id}`);

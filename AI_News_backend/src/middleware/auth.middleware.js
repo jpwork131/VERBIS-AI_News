@@ -16,7 +16,7 @@ module.exports = (req, res, next) => {
     // Attach user to request
     req.user = {
       id: decoded.id,
-      role: decoded.role 
+      role: decoded.role,
     };
 
     next();

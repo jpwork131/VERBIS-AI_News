@@ -27,65 +27,98 @@ const CategoryFilter = ({ activeCategory, onChange }) => {
     fetchCategories();
   }, []);
 
-  const CategoryButton = ({ label, isActive, onClick, Icon }) => (
+  const CategoryPill = ({ label, isActive, onClick, Icon }) => (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center justify-between py-2 transition-all duration-200 border-l-2 mb-1 ${
-        isActive
-          ? "border-blue-600 pl-4 bg-blue-50/50"
-          : "border-transparent pl-2 hover:border-slate-200 hover:pl-4"
-      }`}
+      className={`
+        group flex items-center gap-2 px-3 py-2.5 transition-all duration-200 border
+        ${isActive 
+          ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-blue-500/10" 
+          : "bg-white border-slate-100 text-slate-500 hover:border-blue-600 hover:text-blue-600"}
+      `}
     >
-      <span className="flex items-center gap-3">
-        <Icon 
-          className={`h-3.5 w-3.5 ${
-            isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-900"
-          }`} 
-        />
-        <span className={`text-[11px] font-black uppercase tracking-[0.15em] transition-colors ${
-          isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"
-        }`}>
-          {label}
-        </span>
+      <Icon 
+        size={12} 
+        className={isActive ? "text-blue-400" : "text-slate-300 group-hover:text-blue-600"} 
+      />
+      <span className="text-[9px] font-black uppercase tracking-widest truncate">
+        {label}
       </span>
-      
-      {isActive && (
-        <div className="h-1 w-1 rounded-full bg-blue-600 mr-2" />
-      )}
     </button>
   );
 
   return (
-    <div className="flex flex-col">
-      {/* 1. Static "All" button - Uses "All" to match Home.js logic */}
-      <CategoryButton 
-        label="All Stories"
-        isActive={activeCategory === "All" || !activeCategory}
-        onClick={() => onChange("All")}
-        Icon={LayoutGrid}
-      />
+  <div className="w-full">
+    {loading ? (
+      <div className="flex flex-wrap gap-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-10 w-24 bg-slate-50 animate-pulse rounded-full border border-slate-100" />
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-4">
+        {/* 1. ALL STORIES - Distinct Styling */}
+        <button
+          onClick={() => onChange("All")}
+          className={`group relative flex items-center gap-2 px-6 py-2.5 transition-all duration-500 ${
+            activeCategory === "All" || !activeCategory
+              ? "text-white"
+              : "text-slate-400 hover:text-slate-900"
+          }`}
+        >
+          {/* Animated Background for Active State */}
+          {(activeCategory === "All" || !activeCategory) && (
+            <div className="absolute inset-0 bg-slate-900 rounded-full z-0 layout-transition" />
+          )}
+          
+          <LayoutGrid size={14} className="relative z-10 group-hover:rotate-90 transition-transform duration-500" />
+          <span className="relative z-10 text-[11px] font-black uppercase tracking-widest">
+            All Stories
+          </span>
+        </button>
 
-      {/* 2. Dynamic Categories */}
-      {(categories || []).map((silo) => (
-        <CategoryButton
-          key={silo._id || silo.slug}
-          label={silo.name} // Display Name (e.g., "AI Tech")
-          isActive={activeCategory === silo.slug} // Match against the Slug
-          onClick={() => onChange(silo.slug)} // Emit the Slug to the parent
-          Icon={Hash}
-        />
-      ))}
+        {/* Vertical Divider Line */}
+        <div className="h-4 w-px bg-slate-200 mx-2 hidden sm:block" />
 
-      {/* Loading State */}
-      {loading && (
-        <div className="space-y-4 mt-4 ml-2">
-           {[...Array(3)].map((_, i) => (
-             <div key={i} className="h-2 w-24 bg-slate-100 animate-pulse rounded" />
-           ))}
-        </div>
-      )}
-    </div>
-  );
-}
+        {/* 2. DYNAMIC CATEGORIES */}
+        {categories.map((silo) => {
+          const isActive = activeCategory === silo.slug;
+          return (
+            <button
+              key={silo._id || silo.slug}
+              onClick={() => onChange(silo.slug)}
+              className={`group relative flex items-center gap-3 px-2 py-1 transition-all duration-300`}
+            >
+              {/* The "Indicator Dot" */}
+              <div className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
+                isActive ? "bg-blue-600 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.6)]" : "bg-slate-200 group-hover:bg-slate-400"
+              }`} />
+
+              <div className="flex flex-col items-start">
+                <span className={`text-[11px] font-bold uppercase tracking-tighter transition-colors ${
+                  isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"
+                }`}>
+                  {silo.name}
+                </span>
+                
+                {/* Underline reveal on hover or active */}
+                <div className={`h-[2px] bg-blue-600 transition-all duration-500 ${
+                  isActive ? "w-full" : "w-0 group-hover:w-full"
+                }`} />
+              </div>
+
+              {/* Optional: Add a tiny number or "silo" tag if available */}
+              <span className={`text-[8px] font-black font-mono transition-opacity ${
+                isActive ? "opacity-100 text-blue-600" : "opacity-0 group-hover:opacity-40"
+              }`}>
+                /0{categories.indexOf(silo) + 1}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);};
 
 export default CategoryFilter;
