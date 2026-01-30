@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Filter, ArrowUpDown, Zap, Terminal, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpDown, Zap, Terminal, CheckCircle, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import * as articleApi from "../../api/articles";
 import EditArticleDrawer from "./EditArticleDrawer";
 import CreateAIArticleModal from "./CreateAIArticleModal"; // Corrected typo
@@ -121,49 +121,56 @@ const ArticlesTab = ({ refreshParentStats }) => {
   };
 
   return (
-    <div className="relative space-y-0 animate-in fade-in duration-500">
+    <div className="relative space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
-      {/* Brutalist Toast Notification */}
+      {/* 1. STUDIO TOAST (Refined Floating Notification) */}
       {toast.show && (
-        <div className={`fixed top-10 right-10 z-200 flex items-center gap-3 p-4 border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-in slide-in-from-right-10 ${toast.type === 'success' ? 'bg-blue-600 text-white' : 'bg-red-500 text-white'}`}>
-          {toast.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
+        <div className={`fixed top-8 right-8 z-100 flex items-center gap-4 px-6 py-4 rounded-3xl border border-border backdrop-blur-xl shadow-2xl animate-in slide-in-from-right-10 ${
+          toast.type === 'success' ? 'bg-accent/90 text-white' : 'bg-red-500/90 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+          <span className="text-[11px] font-black uppercase tracking-widest">{toast.message}</span>
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-8">
+      {/* 2. REFINED HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-10">
         <div>
-          <h1 className="text-3xl font-serif font-black tracking-tighter italic lowercase text-slate-900">
-            Article <span className="text-blue-600">Repository</span>
+          <h1 className="text-5xl font-serif font-black tracking-tight italic text-ink mb-3">
+            Article <span className="text-accent">Repository</span>
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">
-            Active Assets: {totalArticles.toString().padStart(4, '0')}
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted">
+              Active Neural Assets: {totalArticles.toString().padStart(4, '0')}
+            </p>
+          </div>
         </div>
+        
         <button 
           onClick={() => setIsAIModalOpen(true)}
-          className="bg-slate-900 text-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.3em] transition-all flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(37,99,235,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+          className="group relative overflow-hidden bg-accent text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-[0_0_30px_-5px_var(--color-accent)] active:scale-95 flex items-center gap-3"
         >
-          <Zap size={14} fill="currentColor" /> Initiate Synthesis
+          <Zap size={14} className="group-hover:fill-white transition-all" /> 
+          Initiate Synthesis
         </button>
       </div>
 
-      {/* COMMAND BAR */}
-      <div className="border-2 border-slate-900 flex flex-wrap items-center bg-white mb-6">
-        <div className="flex items-center flex-1 border-r-2 border-slate-900">
-          <Search className="ml-4 text-slate-400" size={16} />
+      {/* 3. COMMAND BAR (Integrated Search & Filter) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-7 relative group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors" size={18} />
           <input 
             type="text"
-            placeholder="SEARCH_BY_KEYWORD..."
-            className="w-full px-4 py-4 text-[11px] font-mono font-bold outline-none uppercase placeholder:text-slate-300"
+            placeholder="Search by keyword or ID..."
+            className="w-full pl-14 pr-6 py-5 bg-paper border border-border rounded-3xl text-xs font-bold text-ink outline-none focus:ring-2 focus:ring-accent/10 focus:border-accent transition-all uppercase placeholder:text-muted/40 shadow-sm shadow-black/5"
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           />
         </div>
         
-        <div className="relative border-r-2 border-slate-900 min-w-50">
+        <div className="lg:col-span-3 relative">
           <select 
-            className="w-full bg-white px-4 py-4 text-[10px] font-black uppercase tracking-widest outline-none appearance-none cursor-pointer"
+            className="w-full bg-paper border border-border px-6 py-5 rounded-3xl text-[10px] font-black uppercase tracking-widest text-ink outline-none appearance-none cursor-pointer hover:bg-surface transition-colors shadow-sm shadow-black/5"
             value={selectedCategory}
             onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
           >
@@ -172,77 +179,64 @@ const ArticlesTab = ({ refreshParentStats }) => {
               <option key={cat._id} value={cat.slug}>{cat.name}</option>
             ))}
           </select>
-          <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-900 pointer-events-none" size={14} />
+          <Filter className="absolute right-6 top-1/2 -translate-y-1/2 text-muted pointer-events-none" size={14} />
         </div>
 
         <button 
           onClick={() => setSort(sort === "latest" ? "oldest" : "latest")}
-          className="px-6 py-4 text-slate-900 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-colors"
+          className="lg:col-span-2 bg-paper border border-border px-4 py-5 rounded-3xl text-ink text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-surface transition-all shadow-sm shadow-black/5"
         >
-          <ArrowUpDown size={14} /> {sort}
+          <ArrowUpDown size={14} className={sort === "latest" ? "text-accent" : "text-muted"} /> 
+          {sort}
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="border-2 border-slate-900 bg-white overflow-hidden">
+      {/* 4. DATA TABLE CONTAINER */}
+      <div className="bg-paper border border-border rounded-[2.5rem] overflow-hidden shadow-xl shadow-black/5">
         <ArticleTable 
           articles={articles}
           loading={loading}
           onEdit={(article) => {
-              setSelectedArticle(article);
-              setIsEditDrawerOpen(true);
+            setSelectedArticle(article);
+            setIsEditDrawerOpen(true);
           }}
           onDelete={handleDelete}
         />
         
-        {/* PAGINATION */}
-        <div className="p-4 bg-slate-50 border-t-2 border-slate-900 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Terminal size={14} className="text-slate-400" />
-            <span className="font-mono text-[10px] font-bold uppercase text-slate-500">
-              Pointer: {currentPage} / {totalPages}
+        {/* 5. MODERN PAGINATION */}
+        <div className="px-10 py-8 bg-surface/50 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-paper rounded-xl border border-border shadow-sm">
+              <Terminal size={14} className="text-accent" />
+            </div>
+            <span className="font-mono text-[11px] font-bold uppercase text-muted tracking-tight">
+              Pointer: <span className="text-ink">{currentPage}</span> / {totalPages}
             </span>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex gap-3">
             <button 
               disabled={currentPage === 1} 
               onClick={() => setCurrentPage(p => p - 1)} 
-              className="px-4 py-2 border-2 border-slate-900 text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white disabled:opacity-20 transition-all"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-border bg-paper text-[10px] font-black uppercase tracking-widest text-ink hover:bg-accent hover:text-white disabled:opacity-30 disabled:hover:bg-paper disabled:hover:text-ink transition-all shadow-sm active:scale-95"
             >
-              Back
+              <ChevronLeft size={14} /> Back
             </button>
             <button 
               disabled={currentPage === totalPages} 
               onClick={() => setCurrentPage(p => p + 1)} 
-              className="px-4 py-2 border-2 border-slate-900 text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white disabled:opacity-20 transition-all"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-border bg-paper text-[10px] font-black uppercase tracking-widest text-ink hover:bg-accent hover:text-white disabled:opacity-30 disabled:hover:bg-paper disabled:hover:text-ink transition-all shadow-sm active:scale-95"
             >
-              Next
+              Next <ChevronRight size={14} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* CREATE MODAL */}
-      <CreateAIArticleModal 
-        isOpen={isAIModalOpen}
-        onClose={() => setIsAIModalOpen(false)}
-        onCreate={handleCreateAI}
-        loading={loading}
-      />
-      
-      {/* EDIT DRAWER */}
+      {/* MODALS & DRAWERS */}
+      <CreateAIArticleModal isOpen={isAIModalOpen} onClose={() => setIsAIModalOpen(false)} onCreate={handleCreateAI} loading={loading} />
       {isEditDrawerOpen && selectedArticle && (
-      <EditArticleDrawer 
-        isOpen={isEditDrawerOpen}
-        article={selectedArticle}
-        setArticle={setSelectedArticle}
-        onClose={() => {
-          setIsEditDrawerOpen(false);
-          setSelectedArticle(null);
-        }}
-        onUpdate={handleUpdate}
-        isSubmitting={isSubmitting}
-      />
+        <EditArticleDrawer isOpen={isEditDrawerOpen} article={selectedArticle} setArticle={setSelectedArticle} onClose={() => { setIsEditDrawerOpen(false); setSelectedArticle(null); }} onUpdate={handleUpdate} isSubmitting={isSubmitting} />
       )}
     </div>
   );

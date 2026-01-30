@@ -206,7 +206,7 @@ exports.updateCronSchedule = async (req, res) =>{
     // 2. Convert integer (e.g., 30) to Cron String (e.g., "*/30 * * * *")
     // If interval is 60 or more, we might want to use "0 */x" format, 
     // but for simplicity, "*/x" works for most node-cron versions.
-    const newCronString = `*/${intervalMinutes} * * * *`;
+    const newCronString = `*/${interval} * * * *`;
 
     const updatedSettings = await settingsModel.findOneAndUpdate(
       { key: "model_config"},
@@ -249,74 +249,89 @@ exports.updateCronSchedule = async (req, res) =>{
 }
 
 
-
 exports.getSystemAnalytics = async (req, res) => {
-  const redis = getRedis();
-  const CACHE_KEY = "admin:analytics_data";
   try {
-    if (redis) {
-      const cachedData = await redis.get(CACHE_KEY);
-      if (cachedData) {
-        console.log(" Analytics served from Cache");
-        return res.status(200).json(JSON.parse(cachedData));
-      }
-    }
     const now = new Date();
     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
 
-    // 1. User Metrics (Filtered by role: "user")
-    const totalUsers = await User.countDocuments({ role: "user" });
-    const newUsersToday = await User.countDocuments({
-      role: "user",
-      createdAt: { $gte: startOfToday }
-    });
+    // Execute all database queries in parallel
+    const [
+      totalUsers, 
+      newUsersToday, 
+      engagementStats, 
+      contentStats, 
+      categoryStats, 
+      topArticles, // Added correctly here
+      activeRules
+    ] = await Promise.all([
+      // 1. User Totals
+      User.countDocuments({ role: "user" }),
+      
+      // 2. New Users Today
+      User.countDocuments({
+        role: "user",
+        createdAt: { $gte: startOfToday }
+      }),
 
-    // 2. Engagement Metrics (Average activity per user)
-    const engagementStats = await User.aggregate([
-      { $match: { role: "user" } },
-      {
-        $group: {
-          _id: null,
-          // Use $ifNull to ensure we return 0, not null
-          avgSaved: { $avg: { $size: { $ifNull: ["$savedArticles", []] } } },
-          avgLiked: { $avg: { $size: { $ifNull: ["$likedArticles", []] } } }
+      // 3. Average Engagement
+      User.aggregate([
+        { $match: { role: "user" } },
+        {
+          $group: {
+            _id: null,
+            avgSaved: { $avg: { $size: { $ifNull: ["$savedArticles", []] } } },
+            avgLiked: { $avg: { $size: { $ifNull: ["$likedArticles", []] } } }
+          }
         }
-      },
-      {
-        $project: {
-          _id: 0, 
-          avgSaved: { $ifNull: ["$avgSaved", 0] },
-          avgLiked: { $ifNull: ["$avgLiked", 0] }
+      ]),
+
+      // 4. Content & Views
+      Article.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalArticles: { $sum: 1 },
+            totalViews: { $sum: { $ifNull: ["$views", 0] } },
+            todayArticles: {
+              $sum: { $cond: [{ $gte: ["$createdAt", startOfToday] }, 1, 0] }
+            }
+          }
         }
-      }
+      ]),
+
+      // 5. Category Distribution & Ranking
+      Article.aggregate([
+        { 
+          $group: { 
+            _id: "$category", 
+            articleCount: { $sum: 1 },
+            totalViews: { $sum: { $ifNull: ["$views", 0] } } 
+          } 
+        },
+        { $sort: { totalViews: -1 } },
+        { $project: { name: "$_id", totalViews: 1, articleCount: 1, _id: 0 } }
+      ]),
+
+      // 6. Top 10 Articles
+      Article.find({}, { title: 1, views: 1, category: 1 })
+        .sort({ views: -1 })
+        .limit(10)
+        .lean(),
+
+      // 7. Operational Health
+      InjectionScheduleModel.find({ status: "active" })
     ]);
 
-    // 3. Content Metrics
-    const totalArticles = await Article.countDocuments();
-    const articlesToday = await Article.countDocuments({
-      createdAt: { $gte: startOfToday }
-    });
+    const contentData = contentStats[0] || { totalArticles: 0, totalViews: 0, todayArticles: 0 };
 
-    // 4. Category Distribution
-    const categoryStats = await Article.aggregate([
-      { $group: { _id: "$category", count: { $sum: 1 } } },
-      { $project: { 
-          _id: { $ifNull: ["$_id", "Other"] }, // Map null categories to "Other"
-          count: 1 
-      }},
-      { $sort: { count: -1 } }
-    ]);
-
-    // 5. Operational Health
-    const activeRules = await InjectionScheduleModel.find({ status: "active" });
-    const quotaMetrics = activeRules.map(rule => ({
-      category: rule.category,
-      current: rule.countToday,
-      total: rule.articlesPerDay,
-      percentage: ((rule.countToday / rule.articlesPerDay) * 100).toFixed(1)
+    const contentWeighting = categoryStats.map(cat => ({
+      name: cat.name || "Uncategorized",
+      value: cat.articleCount,
+      percentage: ((cat.articleCount / contentData.totalArticles) * 100).toFixed(1),
+      views: cat.totalViews
     }));
 
-   const analyticsResult = {
+    const analyticsResult = {
       success: true,
       data: {
         users: {
@@ -325,24 +340,29 @@ exports.getSystemAnalytics = async (req, res) => {
           engagement: engagementStats[0] || { avgSaved: 0, avgLiked: 0 }
         },
         content: {
-          total: totalArticles,
-          today: articlesToday,
-          distribution: categoryStats
+          total: contentData.totalArticles,
+          today: contentData.todayArticles,
+          totalViews: contentData.totalViews,
+          topArticles: topArticles.map(a => ({
+            label: a.title.length > 20 ? a.title.substring(0, 20) + "..." : a.title,
+            views: a.views || 0,
+            category: a.category
+          })),
+          categoryRanking: categoryStats,
+          contentWeighting: contentWeighting
         },
         ingestion: {
           activeRulesCount: activeRules.length,
-          rules: quotaMetrics
+          rules: activeRules.map(rule => ({
+            category: rule.category,
+            current: rule.countToday,
+            total: rule.articlesPerDay,
+            percentage: ((rule.countToday / rule.articlesPerDay) * 100).toFixed(1)
+          }))
         }
       }
     };
 
-    if (redis) {
-      try {
-        await redis.setex(cacheKey, 300, JSON.stringify(response));
-      } catch {}
-    }
-
-    console.log(" Analytics served from DB and Cached");
     res.status(200).json(analyticsResult);
 
   } catch (error) {

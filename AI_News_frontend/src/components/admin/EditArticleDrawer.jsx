@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Save, Loader2, List, Plus, Newspaper, Layout, ImageIcon, Search, Settings, Globe } from "lucide-react";
+import { X, Save, Loader2, List, Plus, Newspaper, Layout, ImageIcon, Search, Settings, Globe, FileText, Terminal, Hash } from "lucide-react";
 import { getCategories } from "../../api/articles";
 
 const EditArticleDrawer = ({ 
@@ -39,104 +39,112 @@ const EditArticleDrawer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex justify-end">
-      {/* Overlay */}
+    <div className="fixed inset-0 z-200 flex justify-end">
+      {/* 1. STUDIO OVERLAY */}
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+        className="absolute inset-0 bg-ink/40 backdrop-blur-md animate-in fade-in duration-500"
         onClick={onClose}
       />
       
-      {/* Drawer Panel */}
-      <div className="relative w-full sm:w-[85%] md:max-w-2xl bg-white border-l-4 border-slate-900 shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
+      {/* 2. DRAWER PANEL */}
+      <div className="relative w-full sm:w-[90%] md:max-w-2xl bg-paper border-l border-border shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-500 ease-out">
         
-        {/* Header */}
-        <div className="p-6 border-b-2 border-slate-900 flex justify-between items-center bg-white">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-slate-900 text-white">
+        {/* HEADER */}
+        <div className="p-6 md:p-8 border-b border-border flex justify-between items-center bg-surface/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex gap-4 items-center">
+            <div className="p-3 bg-accent/10 text-accent rounded-xl">
               <Newspaper size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Edit Asset</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">ID: {article._id}</p>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-ink">Edit Digital Asset</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[9px] text-muted font-bold uppercase tracking-widest">System Object:</span>
+                <code className="text-[9px] font-mono text-accent bg-accent/5 px-1.5 rounded">{article._id}</code>
+              </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 border border-transparent hover:border-slate-900 transition-all">
+          <button 
+            onClick={onClose} 
+            className="p-3 rounded-xl text-muted hover:bg-surface hover:text-ink transition-all active:scale-90"
+          >
             <X size={20} />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-12 pb-32">
+        {/* FORM BODY */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 pb-40">
           
-          {/* CONTENT SECTION */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 border-b-2 border-slate-900 pb-2">
-              <Layout size={14} className="text-slate-900" />
-              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Article Body</h4>
+          {/* CONTENT MODULE */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 border-b border-border pb-3">
+              <Layout size={14} className="text-accent" />
+              <h4 className="text-[10px] font-black text-ink uppercase tracking-[0.2em]">Neural Content Synthesis</h4>
             </div>
             
             <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Main Headline</label>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Editorial Headline</label>
                 <input 
                   type="text" 
                   value={article.title || ""} 
                   onChange={e => setArticle({...article, title: e.target.value})}
-                  className="w-full p-4 bg-white border-2 border-slate-200 focus:border-slate-900 font-serif font-bold italic text-lg outline-none transition-all"
+                  className="w-full p-5 bg-surface border border-border rounded-2xl focus:border-accent font-serif font-bold italic text-xl text-ink outline-none transition-all shadow-inner placeholder:opacity-20"
                 />
               </div>
 
-              {/* NEW: Summary field - Critical for Home Page display */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Summary (Deck)</label>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">AI Abstract (Deck)</label>
                 <textarea 
                   rows="3"
                   value={article.summary || ""} 
                   onChange={e => setArticle({...article, summary: e.target.value})}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 focus:border-slate-900 text-sm font-medium outline-none transition-all"
-                  placeholder="Brief summary for the article card..."
+                  className="w-full p-5 bg-surface border border-border rounded-2xl focus:border-accent text-sm font-medium text-ink outline-none transition-all resize-none"
+                  placeholder="Summary for landing cards..."
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Text (Markdown)</label>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="text-[10px] font-black text-muted uppercase tracking-widest">Semantic Core (Markdown)</label>
+                  <FileText size={12} className="text-muted/40" />
+                </div>
                 <textarea 
-                  rows="12"
+                  rows="14"
                   value={article.aiContent || ""} 
                   onChange={e => setArticle({...article, aiContent: e.target.value})}
-                  className="w-full p-4 bg-white border-2 border-slate-200 focus:border-slate-900 text-sm leading-relaxed outline-none transition-all font-medium"
+                  className="w-full p-6 bg-surface border border-border rounded-2xl focus:border-accent text-sm leading-relaxed outline-none transition-all font-medium text-ink/80"
                 />
               </div>
             </div>
           </section>
 
-          {/* CLASSIFICATION (SILO LOGIC) */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 border-b-2 border-slate-900 pb-2">
-              <Globe size={14} className="text-slate-900" />
-              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Category Placement</h4>
+          {/* CLASSIFICATION MODULE */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 border-b border-border pb-3">
+              <Globe size={14} className="text-accent" />
+              <h4 className="text-[10px] font-black text-ink uppercase tracking-[0.2em]">Silo Designation</h4>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest"> Category Name</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="text-[10px] font-black text-muted uppercase tracking-widest">Silo Target</label>
                   <button 
                     type="button" 
                     onClick={() => setIsManual(!isManual)}
-                    className="text-[9px] font-black text-blue-600 uppercase hover:underline"
+                    className="text-[9px] font-black text-accent uppercase tracking-tighter hover:underline px-2 py-1 bg-accent/5 rounded-md"
                   >
-                    {isManual ? "List View" : "Manual Override"}
+                    {isManual ? "Switch to Registry" : "Manual Override"}
                   </button>
                 </div>
 
                 {isManual ? (
                   <input 
                     type="text"
-                    placeholder="e.g. Metaverse & Gaming"
+                    placeholder="Custom category..."
                     value={article.category || ""}
                     onChange={(e) => setArticle({ ...article, category: e.target.value })}
-                    className="w-full p-4 bg-white border-2 border-blue-600 font-bold text-sm outline-none"
+                    className="w-full p-4 bg-paper border border-accent rounded-xl font-bold text-sm text-accent outline-none animate-in fade-in zoom-in-95"
                   />
                 ) : (
                   <select 
@@ -149,9 +157,9 @@ const EditArticleDrawer = ({
                         categorySlug: selectedSilo ? selectedSilo.slug : article.categorySlug 
                       });
                     }}
-                    className="w-full p-4 bg-slate-50 border-2 border-slate-200 font-bold text-slate-700 outline-none appearance-none cursor-pointer focus:border-slate-900"
+                    className="w-full p-4 bg-surface border border-border rounded-xl font-bold text-ink outline-none appearance-none cursor-pointer focus:border-accent transition-all"
                   >
-                    <option value="" disabled>Select a Silo</option>
+                    <option value="" disabled>Select Silo...</option>
                     {availableSilos.map((silo) => (
                       <option key={silo._id} value={silo.name}>{silo.name}</option>
                     ))}
@@ -159,95 +167,129 @@ const EditArticleDrawer = ({
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Slug</label>
-                <input 
-                  type="text" 
-                  value={article.slug || ""} 
-                  onChange={e => setArticle({...article, slug: e.target.value})}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 text-[11px] font-mono focus:border-slate-900 outline-none"
-                />
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Route Slug</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={article.slug || ""} 
+                    onChange={e => setArticle({...article, slug: e.target.value})}
+                    className="w-full p-4 bg-surface/50 border border-border rounded-xl text-[11px] font-mono text-ink focus:border-accent outline-none"
+                  />
+                  <Terminal size={12} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted/30" />
+                </div>
               </div>
             </div>
 
-            {/* NEW: SEO Keywords field - Helps the $regex search find it */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SEO Meta Keywords (Comma Separated)</label>
-              <input 
-                type="text" 
-                value={article.seoKeywords ? article.seoKeywords.join(', ') : ""} 
-               onChange={e => {
-                  const val = e.target.value;
-                  setArticle({
-                    ...article, 
-                    seoKeywords: val ? val.split(',').map(s => s.trim()) : []
-                  });
-                }}
-                className="w-full p-4 bg-slate-50 border-2 border-slate-200 text-[11px] font-mono focus:border-slate-900 outline-none"
-                placeholder="nvidia, ai chips, blackwell, tech news"
-              />
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Global Meta Tags</label>
+              <div className="relative group">
+                <input 
+                  type="text" 
+                  value={article.seoKeywords ? article.seoKeywords.join(', ') : ""} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    setArticle({
+                      ...article, 
+                      seoKeywords: val ? val.split(',').map(s => s.trim()) : []
+                    });
+                  }}
+                  className="w-full p-4 bg-surface border border-border rounded-xl text-[11px] font-mono text-ink focus:border-accent outline-none pl-10"
+                  placeholder="tag_01, tag_02..."
+                />
+                <Hash size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-accent" />
+              </div>
             </div>
           </section>
           
-          {/* MEDIA SECTION */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 border-b-2 border-slate-900 pb-2">
-               <ImageIcon size={14} className="text-slate-900" />
-               <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Asset Imagery</h4>
+          {/* MEDIA MODULE */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 border-b border-border pb-3">
+               <ImageIcon size={14} className="text-accent" />
+               <h4 className="text-[10px] font-black text-ink uppercase tracking-[0.2em]">Visual Assets</h4>
             </div>
-            <div className="border-4 border-slate-900 bg-slate-100 aspect-video overflow-hidden">
+            <div className="rounded-4xl border border-border bg-surface aspect-video overflow-hidden shadow-inner group relative">
               <img 
                 src={article.bannerImage || "https://placehold.co/600x400?text=NO_IMAGE"} 
                 alt="Preview" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-linear-to-t from-ink/20 to-transparent pointer-events-none" />
             </div>
             <input 
               type="text" 
-              placeholder="Image URL"
+              placeholder="Source Image URL..."
               value={article.bannerImage || ""} 
               onChange={e => setArticle({...article, bannerImage: e.target.value})}
-              className="w-full p-4 bg-slate-50 border-2 border-slate-200 text-[11px] font-mono focus:border-slate-900 outline-none"
+              className="w-full p-4 bg-surface/50 border border-border rounded-xl text-[11px] font-mono text-ink focus:border-accent outline-none"
             />
           </section>
 
-          {/* SYSTEM SETTINGS */}
-          <section className="space-y-6 bg-slate-900 p-6">
-            <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
-               <Settings size={14} className="text-white" />
-               <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Visibility Controls</h4>
+          {/* SECURITY & VISIBILITY - THEME ADAPTIVE REFACTOR */}
+          <section className="bg-surface border border-border p-8 rounded-[2.5rem] shadow-sm space-y-6 relative overflow-hidden group">
+            {/* Sublte background pulse for active states */}
+            {article.isPurged && (
+              <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none" />
+            )}
+
+            <div className="flex items-center gap-3 border-b border-border pb-4 relative z-10">
+              <div className={`p-2 rounded-lg transition-colors ${article.isPurged ? 'bg-red-500/20 text-red-500' : 'bg-accent/10 text-accent'}`}>
+                <Settings size={14} />
+              </div>
+              <h4 className="text-[10px] font-black text-ink uppercase tracking-[0.3em]">
+                Safety Protocol
+              </h4>
             </div>
-            <div className="flex items-center gap-4">
-              <input 
-                type="checkbox" 
-                id="isPurgedComp"
-                checked={article.isPurged || false} 
-                onChange={e => setArticle({...article, isPurged: e.target.checked})}
-                className="w-6 h-6 border-2 border-white rounded-none accent-blue-600 cursor-pointer"
-              />
-              <label htmlFor="isPurgedComp" className="text-xs font-black text-white uppercase tracking-widest cursor-pointer">
-                Archive / Purge from Live Feed
-              </label>
+
+            <div 
+              onClick={() => setArticle({...article, isPurged: !article.isPurged})}
+              className="flex items-center gap-5 cursor-pointer relative z-10 select-none"
+            >
+              {/* High-Contrast Custom Toggle */}
+              <div className={`
+                w-12 h-6 rounded-full border-2 transition-all flex items-center px-1
+                ${article.isPurged 
+                  ? 'bg-red-500 border-red-500 shadow-lg shadow-red-500/20' 
+                  : 'bg-muted/10 border-muted/20'
+                }
+              `}>
+                <div className={`
+                  w-3 h-3 rounded-full transition-all duration-300 transform
+                  ${article.isPurged 
+                    ? 'translate-x-6 bg-white' 
+                    : 'translate-x-0 bg-muted/40'
+                  }
+                `} />
+              </div>
+
+              <div className="flex flex-col">
+                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${article.isPurged ? 'text-red-500' : 'text-ink'}`}>
+                  {article.isPurged ? "Asset Decommissioned" : "Active Distribution"}
+                </span>
+                <span className="text-[9px] text-muted font-bold uppercase tracking-tighter mt-0.5 opacity-60">
+                  Toggle to restrict public API availability
+                </span>
+              </div>
             </div>
           </section>
         </form>
 
-        {/* Action Footer */}
-        <div className="p-8 border-t-4 border-slate-900 flex gap-4 bg-white mt-auto">
+        {/* FIXED FOOTER */}
+        <div className="p-8 border-t border-border flex gap-4 bg-paper/80 backdrop-blur-md mt-auto  bottom-0 w-full z-20">
           <button 
             type="button"
             onClick={onClose}
-            className="px-6 py-4 bg-white border-2 border-slate-200 font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:border-slate-900 transition-all"
+            className="px-8 py-5 rounded-2xl border border-border font-black text-[10px] uppercase tracking-widest text-muted hover:text-ink hover:bg-surface transition-all active:scale-95"
           >
             Cancel
           </button>
           <button 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 py-4 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-blue-600 shadow-[6px_6px_0px_0px_rgba(37,99,235,1)] active:translate-y-1 active:shadow-none transition-all"
+            className="flex-1 py-5 bg-ink dark:bg-accent text-white font-black text-[11px] uppercase tracking-[0.4em] rounded-2xl flex items-center justify-center gap-4 hover:brightness-110 shadow-xl shadow-accent/10 active:scale-[0.98] transition-all disabled:opacity-20"
           >
-            {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-            {isSubmitting ? "Syncing..." : "Update Asset"}
+            {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            {isSubmitting ? "Syncing Logic..." : "Sync Asset"}
           </button>
         </div>
       </div>

@@ -86,3 +86,7 @@ export const deleteComment = (articleId, commentId) =>
 
 // Utility for saving to user profile (ensure this matches your user/article controller)
 export const saveArticle = (id) => api.post(`/users/save/${id}`);
+
+//track article view count
+export const trackArticleView = (slug) => 
+  api.patch(`/articles/track-view/${slug}`);

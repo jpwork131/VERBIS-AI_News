@@ -2,9 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Globe, Calendar, Sparkles, ChevronLeft, Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown"; 
-import { getArticleBySlug, getArticlesByCategory } from "../api/articles";
-
-import ArticleCard from "../components/cards/ArticleCard";
+import { getArticleBySlug, getArticlesByCategory, trackArticleView } from "../api/articles";
 
 import remarkSlug from 'remark-slug';
 import GithubSlugger from 'github-slugger';
@@ -124,6 +122,22 @@ export default function ArticleDetail() {
         return { text, id: slugger.slug(text) };
       });
   }
+
+  useEffect(() => {
+    const incrementView = async () => {
+      try {
+        // Replace with your actual API URL
+        await trackArticleView(slug);
+        console.log("View count updated successfully");
+      } catch (err) {
+        console.error("Analytics error:", err);
+      }
+    };
+
+    if (slug) {
+      incrementView();
+    }
+  }, [slug]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center font-serif text-slate-400 animate-pulse italic">Reading story...</div>;
   if (!article) return <div className="flex min-h-screen items-center justify-center font-serif text-slate-900">Story not found.</div>;

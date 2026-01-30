@@ -3,7 +3,7 @@ import { assetApi } from '../../api/assets';
 import { settingsApi } from '../../api/settings';
 import toast from 'react-hot-toast';
 import { useBranding } from '../../context/BrandingContext';
-import { Save, Cpu, ImageIcon, Zap, ExternalLink, Globe, ShieldCheck, Terminal, HardDrive } from 'lucide-react';
+import { Save, Cpu, ImageIcon, Zap, ExternalLink, Globe, ShieldCheck, Terminal, HardDrive, RefreshCcw, Loader2 } from 'lucide-react';
 
 const SystemSettings = () => {
   const [activeTab, setActiveTab] = useState('identity');
@@ -111,22 +111,22 @@ const SystemSettings = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 lg:p-10">
+    <div className="max-w-6xl mx-auto p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
       
-      {/* Editorial Navigation */}
-      <div className="flex border-b-2 border-slate-900 mb-10 overflow-x-auto scrollbar-hide">
+      {/* 1. STUDIO SEGMENTED NAVIGATION */}
+      <div className="inline-flex p-1.5 bg-surface border border-border rounded-4xl mb-12 overflow-x-auto scrollbar-hide">
         {[
-          { id: 'identity', label: 'Brand Identity', icon: <Globe size={14} /> },
+          { id: 'identity', label: 'Identity', icon: <Globe size={14} /> },
           { id: 'sync', label: 'Neural Sync', icon: <Zap size={14} /> },
           { id: 'ai-status', label: 'AI Status', icon: <Terminal size={14} /> }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-t-2 border-x-2 -mb-0.5 ${
+            className={`flex items-center gap-3 px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-3xl ${
               activeTab === tab.id 
-                ? 'bg-white border-slate-900 border-b-white text-blue-600' 
-                : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600'
+                ? 'bg-paper text-accent shadow-sm ring-1 ring-border' 
+                : 'text-muted hover:text-ink'
             }`}
           >
             {tab.icon} {tab.label}
@@ -134,85 +134,110 @@ const SystemSettings = () => {
         ))}
       </div>
 
-      <form onSubmit={handleSave} className="bg-white border-2 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,0.05)] p-8 lg:p-12">
+      <form onSubmit={handleSave} className="bg-paper border border-border rounded-[3rem] shadow-xl shadow-black/5 p-8 lg:p-16 relative overflow-hidden">
         
-        {/* TAB 1: IDENTITY */}
+        {/* Decorative Background Accent */}
+        <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-ink pointer-events-none">
+          <ShieldCheck size={200} strokeWidth={1} />
+        </div>
+
+        {/* TAB 1: IDENTITY (Brand Assets) */}
         {activeTab === 'identity' && (
-          <div className="space-y-12 animate-in fade-in duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-16 animate-in fade-in zoom-in-95 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[
-                { label: 'Site Title', key: 'siteTitle' },
-                { label: 'Control Email', key: 'contactEmail' },
-                { label: 'Contact Phone', key: 'contactPhone' }
+                { label: 'Site Title', key: 'siteTitle', placeholder: 'The Protocol' },
+                { label: 'Control Email', key: 'contactEmail', placeholder: 'admin@vault.io' },
+                { label: 'Contact Phone', key: 'contactPhone', placeholder: '+1 (555) 000-000' }
               ].map(field => (
-                <div key={field.key} className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 italic">{field.label}</label>
+                <div key={field.key} className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted ml-1 italic">{field.label}</label>
                   <input 
                     value={settings[field.key]} 
+                    placeholder={field.placeholder}
                     onChange={e => setSettings({...settings, [field.key]: e.target.value})} 
-                    className="w-full bg-slate-50 border-2 border-slate-100 p-4 text-sm font-bold outline-none focus:border-slate-900 transition-colors" 
+                    className="w-full bg-surface border border-border rounded-2xl p-5 text-sm font-bold text-ink outline-none focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all" 
                   />
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {[
                 { label: 'Brand Logo', ref: logoRef, key: 'logo', preview: previews.logo, fallback: settings.logo, type: 'logo' },
                 { label: 'Article Hero Fallback', ref: bannerRef, key: 'fallbackBannerUrl', preview: previews.banner, fallback: settings.fallbackBannerUrl, type: 'banner' }
               ].map(asset => (
-                <div key={asset.key} className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-900">{asset.label}</label>
-                  <div className="aspect-video bg-slate-100 border-2 border-slate-900 flex items-center justify-center overflow-hidden relative group">
+                <div key={asset.key} className="space-y-5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted ml-1">{asset.label}</label>
+                  <div className="aspect-video bg-surface border border-border rounded-[2.5rem] flex items-center justify-center overflow-hidden relative group shadow-inner">
                     <img 
                       src={asset.preview || asset.fallback} 
-                      className={`transition-all duration-500 group-hover:scale-105 ${asset.type === 'logo' ? 'max-h-[40%] object-contain' : 'w-full h-full object-cover grayscale group-hover:grayscale-0'}`} 
+                      className={`transition-all duration-700 group-hover:scale-110 ${asset.type === 'logo' ? 'max-h-[30%] object-contain' : 'w-full h-full object-cover grayscale-0 group-hover:brightness-75'}`} 
                       alt="Preview" 
-                      onError={(e) => { e.target.src = "https://placehold.co/600x400?text=ASSET_VOID"; }} 
+                      onError={(e) => { e.target.src = "https://placehold.co/600x400/0f172a/white?text=VOID_ASSET"; }} 
                     />
-                    <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/60 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <label htmlFor={asset.key} className="bg-white text-slate-900 px-6 py-3 text-[10px] font-black uppercase tracking-tighter cursor-pointer hover:bg-blue-600 hover:text-white transition-colors">Replace Asset</label>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm bg-ink/20">
+                      <label htmlFor={asset.key} className="bg-paper text-ink px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl active:scale-95">
+                        Replace Asset
+                      </label>
                     </div>
                   </div>
                   <input type="file" ref={asset.ref} hidden id={asset.key} onChange={(e) => handleFileChange(e, asset.type)} accept="image/*" />
-                  <input 
-                    type="text" 
-                    placeholder="REMOTE_URL_SOURCE" 
-                    value={settings[asset.key] || ""} 
-                    onChange={e => handleUrlChange(asset.type, e.target.value)} 
-                    className="w-full bg-slate-50 border border-slate-200 p-3 text-[10px] font-mono outline-none focus:border-slate-400" 
-                  />
+                  <div className="relative group">
+                    <input 
+                      type="text" 
+                      placeholder="Source URL Override..." 
+                      value={settings[asset.key] || ""} 
+                      onChange={e => handleUrlChange(asset.type, e.target.value)} 
+                      className="w-full bg-surface/50 border border-border rounded-xl p-4 pl-5 text-[10px] font-mono text-muted outline-none focus:border-accent transition-colors" 
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* TAB 2: NEURAL SYNC */}
+        {/* TAB 2: NEURAL SYNC (Adaptive Dev-Ops Panel) */}
         {activeTab === 'sync' && (
-          <div className="max-w-2xl mx-auto py-10 animate-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-slate-900 p-10 text-white border-b-8 border-blue-600">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="p-3 bg-blue-600 text-white">
-                  <Zap size={24} fill="currentColor" />
+          <div className="max-w-2xl mx-auto py-12 animate-in slide-in-from-bottom-8 duration-700">
+            {/* Changed: Removed hardcoded bg-ink for var-based surface with higher depth */}
+            <div className="bg-surface border border-border rounded-[3rem] p-12 shadow-2xl relative overflow-hidden ring-1 ring-accent/5">
+              
+              {/* Decorative Zap - Now uses accent color with very low opacity */}
+              <div className="absolute top-0 right-0 p-8 text-accent/5 rotate-12 pointer-events-none">
+                <Zap size={140} strokeWidth={1} />
+              </div>
+              
+              <div className="flex items-center gap-6 mb-12 relative z-10">
+                {/* Glow effect on the icon container */}
+                <div className="p-4 bg-accent rounded-2xl text-white shadow-[0_0_20px_rgba(var(--color-accent-rgb),0.3)]">
+                  <RefreshCcw size={28} className={loading ? 'animate-spin' : ''} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black uppercase tracking-tighter italic">Intelligence Sync</h3>
-                  <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Model Endpoint Configuration</p>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter italic text-ink">
+                    Intelligence Sync
+                  </h3>
+                  <p className="text-muted text-[10px] uppercase tracking-[0.2em] font-bold mt-1">
+                    Global Endpoint Overrides
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 relative z-10">
                 {[
-                  { label: 'Text Generation Key', placeholder: 'Groq, OpenAI, or OpenRouter', key: 'textKey' },
-                  { label: 'Image Generation Key', placeholder: 'Cloudflare ID:Token or DALL-E', key: 'imageKey' }
+                  { label: 'Text Generation Key', placeholder: '••••••••••••••••', key: 'textKey' },
+                  { label: 'Image Generation Key', placeholder: '••••••••••••••••', key: 'imageKey' }
                 ].map(input => (
                   <div key={input.key} className="space-y-3">
-                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-400">{input.label}</label>
+                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-accent/80 ml-1">
+                      {input.label}
+                    </label>
                     <input 
                       type="password" 
                       placeholder={input.placeholder}
-                      className="w-full bg-slate-800 border-b-2 border-slate-700 p-4 text-sm font-mono focus:border-blue-500 outline-none transition-all placeholder:text-slate-600"
+                      // Changed: Integrated with theme variables for consistent dark mode look
+                      className="w-full bg-paper border border-border rounded-2xl p-5 text-sm font-mono text-ink focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all placeholder:text-muted/30"
                       onChange={(e) => setSyncInputs({...syncInputs, [input.key]: e.target.value})}
                     />
                   </div>
@@ -222,82 +247,114 @@ const SystemSettings = () => {
                   type="button"
                   onClick={handleNeuralSync}
                   disabled={loading || !syncInputs.textKey}
-                  className="w-full py-5 bg-blue-600 hover:bg-white hover:text-slate-900 text-white font-black text-[11px] uppercase tracking-[0.4em] transition-all disabled:bg-slate-800 disabled:text-slate-600"
+                  // Changed: Button now adapts. In dark mode, it glows; in light mode, it's solid.
+                  className="w-full py-6 bg-accent hover:brightness-110 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] transition-all disabled:opacity-30 disabled:grayscale shadow-lg shadow-accent/20 active:scale-[0.98]"
                 >
                   {loading ? "Initializing Smart Mapping..." : "Re-Sync Neural Pool"}
                 </button>
               </div>
+
+              {/* Security Footer Note */}
+              <div className="mt-8 flex justify-center items-center gap-2">
+                <div className="h-1 w-1 rounded-full bg-accent" />
+                <span className="text-[8px] font-bold text-muted uppercase tracking-[0.2em]">Keys are encrypted at rest</span>
+                <div className="h-1 w-1 rounded-full bg-accent" />
+              </div>
             </div>
           </div>
         )}
 
-        {/* TAB 3: AI STATUS */}
+        {/* TAB 3: AI STATUS (Providers) */}
         {activeTab === 'ai-status' && (
-          <div className="space-y-8 animate-in fade-in duration-300">
-            <div className="flex flex-col md:flex-row justify-between border-b-2 border-slate-100 pb-10 gap-8">
-              <div className="flex gap-12">
+          <div className="space-y-10 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row justify-between items-center bg-surface border border-border rounded-3xl p-8 gap-8">
+              <div className="flex gap-16">
                 {[
-                  { label: 'Primary Text', value: settings.activeTextProvider, icon: <Cpu className="text-blue-600" /> },
-                  { label: 'Primary Image', value: settings.activeImageProvider, icon: <ImageIcon className="text-slate-400" /> }
+                  { label: 'Primary Text', value: settings.activeTextProvider, icon: <Cpu className="text-accent" /> },
+                  { label: 'Primary Image', value: settings.activeImageProvider, icon: <ImageIcon className="text-muted" /> }
                 ].map(stat => (
                   <div key={stat.label}>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{stat.label}</p>
-                    <div className="flex items-center gap-3 text-xl font-black text-slate-900 uppercase italic">
-                      {stat.icon} {stat.value || "VOID"}
+                    <p className="text-[9px] font-black text-muted uppercase tracking-widest mb-3">{stat.label}</p>
+                    <div className="flex items-center gap-4 text-2xl font-black text-ink uppercase italic tracking-tighter">
+                      <span className="p-2 bg-paper rounded-lg border border-border">{stat.icon}</span>
+                      {stat.value || "VOID"}
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="bg-emerald-50 border-2 border-emerald-500 px-6 py-3 flex items-center gap-3 self-start">
-                <div className="w-2 h-2 bg-emerald-500 animate-ping" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Core Synchronized</span>
+              <div className="flex items-center gap-4 px-6 py-3 bg-green-500/10 rounded-2xl border border-green-500/20">
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_var(--color-green-500)]" />
+                <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Core Nominal</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-5">
               {settings?.aiProviders?.map((provider, idx) => (
-                <div key={idx} className="group p-8 bg-slate-50 border-2 border-slate-200 hover:border-slate-900 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                    <div className={`p-4 border-2 ${provider.category === 'text' ? 'bg-white border-blue-600 text-blue-600' : 'bg-white border-slate-900 text-slate-900'}`}>
-                      {provider.category === 'text' ? <Cpu size={24} /> : <ImageIcon size={24} />}
+                <div key={idx} className="group p-8 bg-surface border border-border rounded-4xl hover:border-accent/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8">
+                  <div className="flex items-center gap-8">
+                    <div className={`p-5 rounded-2xl border ${provider.category === 'text' ? 'bg-accent text-white border-accent' : 'bg-paper text-ink border-border shadow-sm'}`}>
+                      {provider.category === 'text' ? <Cpu size={28} /> : <ImageIcon size={28} />}
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-900 uppercase text-lg italic tracking-tighter leading-none">{provider.name}</h4>
-                      <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase">{provider.baseUrl}</p>
+                      <h4 className="font-black text-ink uppercase text-xl italic tracking-tighter leading-none">{provider.name}</h4>
+                      <p className="text-[10px] font-mono text-muted mt-2 uppercase tracking-tight">{provider.baseUrl}</p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-wrap items-center gap-8">
+                  <div className="flex flex-wrap items-center gap-10">
                     {[
-                      { label: 'Model_ID', value: provider.textModel || provider.imageModel, mono: true },
-                      { label: 'Protocol', value: provider.payloadStructure, mono: false },
-                      { label: 'State', value: 'Active', mono: false, color: 'text-emerald-600' }
+                      { label: 'Model_ID', value: provider.textModel || provider.imageModel, color: 'text-ink font-mono font-bold' },
+                      { label: 'Protocol', value: provider.payloadStructure, color: 'text-muted font-bold' },
+                      { label: 'Health', value: 'Optimized', color: 'text-accent font-black' }
                     ].map(item => (
                       <div key={item.label}>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{item.label}</p>
-                        <p className={`text-[10px] font-bold uppercase ${item.mono ? 'font-mono' : ''} ${item.color || 'text-slate-700'}`}>{item.value}</p>
+                        <p className="text-[8px] font-black text-muted/50 uppercase tracking-[0.2em] mb-1.5">{item.label}</p>
+                        <p className={`text-[11px] uppercase ${item.color}`}>{item.value}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-              )) || <div className="p-20 text-center border-2 border-dashed border-slate-200 text-slate-400 uppercase font-black text-xs tracking-widest italic">No neural assets detected.</div>}
+              )) || <div className="p-24 text-center border-2 border-dashed border-border rounded-[3rem] text-muted uppercase font-black text-[10px] tracking-[0.4em] italic bg-surface/50">Null_Sequence: No assets found</div>}
             </div>
           </div>
         )}
 
-        <div className="mt-12 pt-8 border-t-2 border-slate-900 flex justify-end">
+        {/* GLOBAL SAVE ACTION - DARK MODE OPTIMIZED */}
+        <div className="mt-16 pt-10 border-t border-border flex justify-end">
           <button 
             type="submit" 
             disabled={loading} 
-            className="group bg-slate-900 text-white px-12 py-5 font-black text-[11px] uppercase tracking-[0.4em] hover:bg-blue-600 transition-all flex items-center gap-3 disabled:bg-slate-200"
+            className={`
+              group relative overflow-hidden px-16 py-6 rounded-2xl font-black text-[11px] 
+              uppercase tracking-[0.4em] transition-all duration-300 flex items-center gap-4
+              active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
+              
+              /* LIGHT MODE: Solid Ink */
+              bg-ink text-white 
+              
+              /* DARK MODE: Neon Accent Border & Inner Glow */
+              dark:bg-accent/10 dark:text-accent dark:border-2 dark:border-accent/50 
+              dark:hover:bg-accent dark:hover:text-white dark:hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.3)]
+            `}
           >
-            <Save size={16} />
-            {loading ? "SECURE_SYNCING..." : "COMMIT_CHANGES"}
+            {/* Subtle Loading Spinner Overlay */}
+            {loading ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Save size={18} className="group-hover:scale-110 transition-transform" />
+            )}
+            
+            <span className="relative z-10">
+              {loading ? "SECURE_SYNCING..." : "COMMIT_CHANGES"}
+            </span>
+
+            {/* Reflection Beam - Only visible in Dark Mode hover */}
+            <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
           </button>
         </div>
       </form>
     </div>
   );
-};
+}
 
 export default SystemSettings;

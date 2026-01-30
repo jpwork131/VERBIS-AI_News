@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Activity, ShieldCheck, Terminal, Layers } from "lucide-react";
+import { Activity, ShieldCheck, Terminal, Layers, Clock, RotateCw } from "lucide-react";
 
 import StatsGrid from "../components/admin/StatsGrid";
 import IngestionStatus from "../components/admin/InjestionStatus";
@@ -16,6 +16,12 @@ const Analytics = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [isDark, setIsDark] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+  };
 
   const fetchStats = async () => {
     try {
@@ -55,106 +61,94 @@ const Analytics = () => {
   );
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden text-slate-900 selection:bg-blue-100">
+    /* Scoped Theme Wrapper */
+    <div className={`admin-theme ${isDark ? 'dark' : ''} flex h-screen overflow-hidden selection:bg-accent/20 transition-colors duration-300`}>
+      
       {/* --- SIDEBAR --- */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={sidebarCounts} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        counts={sidebarCounts} 
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+      />
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 overflow-y-auto border-l border-slate-100 relative">
+      <main className="flex-1 overflow-y-auto bg-surface relative transition-colors duration-300">
         
-        {/* Editorial Top Bar */}
-        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-900 bg-white px-8 py-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-slate-900 p-2 text-white">
-              <Terminal size={18} />
+        {/* Soft Modern Header (Tailux Style) */}
+        <header className="sticky top-0 z-50 flex items-center justify-between bg-paper/80 backdrop-blur-md border-b border-border px-10 py-5">
+          <div className="flex items-center gap-5">
+            <div className="bg-accent/10 p-2.5 rounded-xl text-accent hidden sm:block">
+              <Terminal size={20} />
             </div>
             <div>
-              <h2 className="font-serif text-2xl font-black lowercase tracking-tighter leading-none">
+              <h2 className="font-serif text-3xl font-black capitalize tracking-tight leading-none text-ink mb-1">
                 {activeTab.replace("-", " ")}
               </h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">System Live • Terminal v2.0</p>
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Node Status: Operational</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Last Sync</p>
-              <p className="font-mono text-[10px] font-bold">{new Date().toLocaleTimeString()}</p>
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-surface border border-border rounded-2xl mr-2">
+              <Clock size={14} className="text-muted" />
+              <div className="text-left">
+                <p className="text-[8px] font-black uppercase tracking-tighter text-muted leading-none">Last Sync</p>
+                <p className="font-mono text-[10px] font-bold text-ink">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
             </div>
+            
             <button 
               onClick={fetchStats}
-              className="border border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all"
+              className="group flex items-center gap-2 bg-accent hover:bg-accent/90 text-white px-5 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-accent/20 active:scale-95"
             >
-              Refresh Data
+              <RotateCw size={14} className="group-hover:rotate-180 transition-transform duration-500" />
+              <span>Refresh</span>
             </button>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-10 max-w-400 mx-auto">
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && data && (
-            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
+            <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
               
               {/* Section Tag */}
-              <div className="flex items-center gap-2 mb-6">
-                <Layers size={14} className="text-blue-600" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">System Vitality Metrics</span>
+              <div className="flex items-center gap-3">
+                <div className="h-px w-8 bg-accent/30" />
+                <Layers size={14} className="text-accent" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">Real-time Vitality</span>
               </div>
 
-              <StatsGrid data={data} />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-12">
-                <div className="border-t-2 border-slate-900 pt-6">
-                   <h3 className="mb-6 font-serif text-xl font-bold tracking-tight">Active Ingestion Streams</h3>
+              {/* Components using the new theme variables */}
+              <div className="transition-all">
+                <StatsGrid data={data} />
+              </div>
+                   <CategoryChart distribution={data?.content?.contentWeighting || []} />
+                
                    <IngestionStatus rules={data?.ingestion?.rules || []} />
-                </div>
-                <div className="border-t-2 border-slate-900 pt-6">
-                   <h3 className="mb-6 font-serif text-xl font-bold tracking-tight">Content Weighting</h3>
-                   <CategoryChart distribution={data?.content?.distribution || []} />
-                </div>
+            </div>
+          )}
+
+          {/* TAB ROUTING: Standard Components */}
+          <div className="animate-in fade-in duration-500">
+            {activeTab === "content" && <ArticlesTab refreshParentStats={fetchStats} />}
+            {activeTab === "categories" && <CategoryManager />}
+            {activeTab === "ingestion" && <InjectionSchedule />}
+            
+            {activeTab === "cron-settings" && (
+              <div className="max-w-3xl bg-paper rounded-[2.5rem] border border-border p-10 shadow-sm shadow-black/5">
+                <h2 className="mb-8 font-serif text-3xl font-black text-ink">Cron Configuration</h2>
+                <SettingsForm currentSettings={data?.config} onUpdate={fetchStats} />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* CONTENT TAB */}
-          {activeTab === "content" && (
-            <div className="animate-in fade-in duration-500">
-              <ArticlesTab key="content-manager"
-              refreshParentStats={fetchStats}
-              />
-            </div>
-          )}
-
-          {/* CATEGORIES TAB */}
-          {activeTab === "categories" && (
-            <div className="animate-in fade-in duration-500">
-              <CategoryManager key="categories-manager" />
-            </div>
-          )}
-
-          {/* INGESTION TAB */}
-          {activeTab === "ingestion" && (
-            <div className="animate-in fade-in duration-500">
-              <InjectionSchedule key="ingestion" />
-            </div>
-          )}
-
-          {/* SETTINGS TABS */}
-          {activeTab === "cron-settings" && (
-            <div className="max-w-2xl border border-slate-100 p-8 shadow-sm">
-              <SettingsForm 
-                currentSettings={data?.config} 
-                onUpdate={fetchStats}
-              />
-            </div>
-          )}
-
-          {activeTab === "system-settings" && (
-            <SystemSettings />
-          )}
+            {activeTab === "system-settings" && <SystemSettings />}
+          </div>
         </div>
       </main>
     </div>

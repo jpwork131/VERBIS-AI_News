@@ -32,6 +32,8 @@ router.post("/:id/comment", authMiddleware, interactionLimiter, controller.addCo
 router.patch("/:id/comments/:commentId/like", authMiddleware, controller.toggleCommentLike);
 router.delete("/:id/comments/:commentId", authMiddleware, controller.deleteComment);
 
+router.patch("/track-view/:slug",controller.trackView);
+
 // 6. ADMIN ROUTES
 router.post("/admin/create", authMiddleware, authorize("admin"), controller.createArticleAI);
 router.put("/admin/update/:id", authMiddleware, authorize("admin"), controller.updateArticle);

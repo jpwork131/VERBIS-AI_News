@@ -387,3 +387,29 @@ exports.deleteComment = async (req, res) => {
     res.status(500).json({ message: "Delete failed" });
   }
 };
+
+/** track view on article
+ */
+exports.trackView = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    
+    // findOneAndUpdate with $inc is the most efficient way
+    const article = await Article.findOneAndUpdate(
+      { slug: slug }, 
+      { $inc: { views: 1 } }, 
+      { new: true } // Returns the updated document so we can see the result
+    );
+
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    res.status(200).json({ 
+      message: "View tracked", 
+      currentViews: article.views 
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

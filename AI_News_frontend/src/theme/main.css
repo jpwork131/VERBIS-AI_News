@@ -1,31 +1,55 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* 1. Standard Tailwind v4 Theme Block */
 @theme {
   /* Editorial Color Palette */
-  --color-ink: #0f172a;       /* Dark slate for high readability */
-  --color-paper: #ffffff;     /* Pure white */
-  --color-accent: #2563eb;    /* Trustworthy Blue */
-  --color-muted: #64748b;     /* Medium gray for secondary text */
-  
+  --color-ink: #0f172a;
+  --color-paper: #ffffff;
+  --color-surface: #f8fafc;
+  --color-accent: #2563eb;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+
   /* Typography */
   --font-serif: "Ibarra Real Nova", serif;
   --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
+/* 2. Scoped Styling & Dark Mode Logic */
 @layer base {
-  body {
-    /* Globally fix the "too light" text */
-    @apply bg-paper text-ink antialiased;
+  /* Apply to the admin section specifically */
+  .admin-theme {
+    @apply antialiased transition-colors duration-300;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
     font-family: var(--font-sans);
   }
 
-  h1, h2, h3, h4 {
-    @apply font-serif font-black tracking-tight text-ink;
+  /* Headings only inside admin-theme */
+  .admin-theme h1, 
+  .admin-theme h2, 
+  .admin-theme h3, 
+  .admin-theme h4 {
+    @apply font-serif font-black tracking-tight;
   }
 
-  /* Smooth scrolling for the Table of Contents we built earlier */
-  html {
-    scroll-behavior: smooth;
+  /* Manual Dark Mode Mapping for the Scoped Container */
+  .admin-theme.dark {
+    --color-ink: #f8fafc;
+    --color-paper: #0b1120;
+    --color-surface: #1e293b;
+    --color-accent: #6366f1;
+    --color-muted: #94a3b8;
+    --color-border: #1e293b;
+    
+    background-color: var(--color-paper);
+    color: var(--color-ink);
   }
+}
+
+/* 3. Smooth scrolling for the whole app */
+html {
+  scroll-behavior: smooth;
 }
